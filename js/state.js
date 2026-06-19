@@ -413,7 +413,7 @@ function selectChar(ch) {
 const SL = [
   {
     id: "peso",
-    l: "Weight",
+    l: "Peso",
     min: 2,
     max: 46,
     def: 12,
@@ -502,7 +502,7 @@ const SL = [
   },
   { id: "slant", l: "Slant", min: -55, max: 55, def: 0, f: (v) => v },
   { id: "rot", l: "Glyph rot", min: -45, max: 45, def: 0, f: (v) => v + "°" },
-  { id: "penang", l: "Pen angle", min: -90, max: 90, def: 0, f: (v) => v + "°" },
+  { id: "penang", l: "Angolo", min: -90, max: 90, def: 0, f: (v) => v + "°" },
   { id: "apice", l: "Miter", min: 1, max: 14, def: 4, f: (v) => v },
   { id: "apxOff", l: "Apex off", min: -22, max: 22, def: 0, f: (v) => v },
   { id: "apxThin", l: "Apex thin", min: 0, max: 60, def: 0, f: (v) => v + "%" },
@@ -513,6 +513,14 @@ const SL = [
     max: 60,
     def: 0,
     f: (v) => v + "°",
+  },
+  {
+    id: "tcut",
+    l: "Term. cut",
+    min: -60,
+    max: 60,
+    def: 0,
+    f: (v) => v + "%",
   },
   { id: "inktrap", l: "Ink trap", min: 0, max: 24, def: 0, f: (v) => v },
   {
@@ -672,7 +680,7 @@ const PANELS = [
       {
         n: "Penna",
         knobs: ["peso", "contrasto", "penang"],
-        h: "Weight = larghezza nib (tratto spesso). Contrasto = quanto è sottile l'asse stretto. Pen angle ruota la nib: il contrasto segue la rotazione.",
+        h: "Peso = spessore asta, Contrasto = quanto le orizzontali sono più sottili, Angolo inclina la penna. Bar = spessore base orizzontale.",
       },
       {
         n: "Trasf.",
@@ -792,7 +800,7 @@ const PANELS = [
       },
       {
         n: "Termin.",
-        knobs: ["tang", "sLen", "sThk"],
+        knobs: ["tang", "tcut", "sLen", "sThk"],
         h: "Term. angle taglia i terminali in obliquo. Serif len/thk = grazie (con Grazie ≠ Sans).",
       },
     ],
@@ -884,8 +892,7 @@ function conv(r) {
   return {
     pen: r.pen || "ellipse",
     peso: r.peso / 100,
-    // model B (broad-nib): asse stretto = weight × (1-contrasto). Niente knob bar separato.
-    bar: (r.peso / 100) * (1 - (r.contrasto || 0) / 100),
+    contrasto: (r.contrasto || 0) / 100,
     altezza: r.altezza / 100,
     larghezza: r.larghezza / 100,
     mid: r.mid / 100,
@@ -900,6 +907,7 @@ function conv(r) {
     rot: (r.rot * Math.PI) / 180,
     penang: (r.penang * Math.PI) / 180,
     tang: (r.tang * Math.PI) / 180,
+    tcut: (r.tcut || 0) / 100,
     serif: r.serif,
     join: r.join,
     cap: r.cap,

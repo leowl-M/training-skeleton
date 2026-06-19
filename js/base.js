@@ -370,6 +370,10 @@ async function setBase(name) {
     if (sel) sel.value = baseName;
   }
 }
+// l'editor base salva su localStorage da un'altra scheda: se la base attiva è "custom", ricarica live
+window.addEventListener("storage", (e) => {
+  if (e.key === "ht_base_custom" && baseName === "custom") setBase("custom");
+});
 function srcGlifo(ch) {
   if (skelEdits[ch]) return skelEdits[ch];
   if (BASE[ch]) return BASE[ch];

@@ -241,6 +241,23 @@ function termCap(c, fr, to, h, fw, cap, out) {
   }
   // butt: nessun punto (collegamento dritto fr→to)
 }
+// === Penna broad-nib: mezza-larghezza del tratto per direzione (portabile, no deps) ===
+// normalAngle = angolo della normale locale del tratto. Ritorna lo scostamento
+// dell'outline dall'asse (mezzo spessore lì). weight = asse largo (em), contrast
+// 0..1 = quanto è sottile l'asse stretto (= weight*(1-contrast)), penAngle ruota
+// la nib, shape "ellipse"|"rect"|"pointed". Asse stretto segue weight → i nomi
+// restano veri a qualsiasi rotazione (vecchio bug: bar indipendente mentiva sulle curve).
+function nibHalfWidth(normalAngle, { weight, contrast = 0, penAngle = 0, shape = "ellipse" }) {
+  const ra = weight / 2,
+    rb = (weight * (1 - contrast)) / 2;
+  const phi = normalAngle - penAngle,
+    cs = Math.cos(phi),
+    sn = Math.sin(phi);
+  if (shape === "rect") return Math.abs(ra * cs) + Math.abs(rb * sn);
+  if (shape === "pointed") return rb + (ra - rb) * Math.pow(Math.abs(cs), 1.8);
+  return Math.hypot(ra * cs, rb * sn);
+}
+
 function traccia(P, w, o) {
   o = o || {};
   const cl = !!o.closed;
@@ -258,8 +275,8 @@ function traccia(P, w, o) {
     tMin = o.trapMin || Math.PI / 3,
     tMax = o.trapMax || (Math.PI * 17) / 18,
     pr = o.penrot || 0,
-    ra = (o.stem || w) / 2,
-    rb = (o.bar || w) / 2;
+    weight = o.stem || w,            // asse largo = peso
+    contrast = o.contrast || 0;      // asse stretto = weight*(1-contrast)
   const sg = [];
   for (let i = 0; i < n - 1; i++) sg.push(seg(P[i], P[i + 1]));
   if (cl) sg.push(seg(P[n - 1], P[0]));
@@ -267,8 +284,13 @@ function traccia(P, w, o) {
   const inc = (i) => (cl ? sg[(i - 1 + m) % m] : i > 0 ? sg[i - 1] : null),
     out = (i) => (cl ? sg[i % m] : i < n - 1 ? sg[i] : null);
   const tSa = o.taperS || 0,
-    tEa = o.taperE || 0,
-    tspan = Math.max(2, Math.floor(n * 0.42));
+    tEa = o.taperE || 0;
+  // span del taper in arc-length (non in numero di nodi) → uniforme su curve a densità variabile
+  const cum = [0];
+  for (let i = 1; i < n; i++) cum[i] = cum[i - 1] + dista(P[i - 1], P[i]);
+  const totalL = cum[n - 1] || 1,
+    tspanL = totalL * 0.42,
+    smooth = (t) => t * t * (3 - 2 * t); // smoothstep: spalla morbida invece di lineare
   const hw = (i) => {
     const a = inc(i),
       b = out(i);
@@ -283,17 +305,12 @@ function traccia(P, w, o) {
       ny += b.nl.y;
     }
     const L = Math.hypot(nx, ny) || 1;
-    const phi = Math.atan2(ny / L, nx / L) - pr,
-      cs = Math.cos(phi),
-      sn = Math.sin(phi);
-    let h =
-      o.pen === "rect"
-        ? Math.abs(ra * cs) + Math.abs(rb * sn)
-        : o.pen === "pointed"
-          ? // nib appuntito/flessibile: contrasto da espansione (verticali spesse, orizzontali
-            // sottili) con transizione netta → aste piene, grazie/curve a filo (stile Didone)
-            rb + (ra - rb) * Math.pow(Math.abs(cs), 1.8)
-          : Math.sqrt(ra * ra * cs * cs + rb * rb * sn * sn);
+    let h = nibHalfWidth(Math.atan2(ny / L, nx / L), {
+      weight,
+      contrast,
+      penAngle: pr,
+      shape: o.pen,
+    });
     const pIn = o.pressIn || 1,
       pOut = o.pressOut || 1;
     if (!cl && (pIn !== 1 || pOut !== 1)) {
@@ -307,8 +324,10 @@ function traccia(P, w, o) {
     if (o.wob) {
       h *= Math.max(0.1, 1 + o.wob * Math.sin(i * (o.wobFreq || 4) * 0.55));
     }
-    if (tSa > 0 && i < tspan) h *= 1 - tSa * (1 - i / tspan);
-    if (tEa > 0 && i > n - 1 - tspan) h *= 1 - tEa * (1 - (n - 1 - i) / tspan);
+    if (tSa > 0 && cum[i] < tspanL)
+      h *= 1 - tSa * (1 - smooth(cum[i] / tspanL));
+    if (tEa > 0 && totalL - cum[i] < tspanL)
+      h *= 1 - tEa * (1 - smooth((totalL - cum[i]) / tspanL));
     return h;
   };
   const lato = (s) => {
@@ -364,20 +383,48 @@ function traccia(P, w, o) {
   }
   const L = lato(1),
     R = lato(-1);
+  // gating per-estremità: term=[start,end]. Estremità off → butt piatto, niente tang/tcut/cap (es. giunzioni, o lato che non vuoi terminare)
+  const term = o.term || [1, 1],
+    tS = term[0] !== 0,
+    tE = term[1] !== 0,
+    capS = tS ? cap : "butt",
+    capE = tE ? cap : "butt",
+    cl2 = (v, lim) => Math.max(-lim, Math.min(lim, v));
   const ta = o.tang || 0;
   if (ta && cap === "butt" && L.length && R.length) {
     const tn = Math.tan(ta),
-      clampT = (v, lim) => Math.max(-lim, Math.min(lim, v)),
       de = sg[m - 1].d,
-      he = clampT(hw(n - 1) * tn, dista(P[n - 1], P[n - 2]) * 0.85),
+      he = cl2(hw(n - 1) * tn, dista(P[n - 1], P[n - 2]) * 0.85),
       li = L.length - 1,
-      ri = R.length - 1;
-    L[li] = { x: L[li].x + de.x * he, y: L[li].y + de.y * he };
-    R[ri] = { x: R[ri].x - de.x * he, y: R[ri].y - de.y * he };
-    const ds = sg[0].d,
-      hs = clampT(hw(0) * tn, dista(P[0], P[1]) * 0.85);
-    L[0] = { x: L[0].x - ds.x * hs, y: L[0].y - ds.y * hs };
-    R[0] = { x: R[0].x + ds.x * hs, y: R[0].y + ds.y * hs };
+      ri = R.length - 1,
+      ds = sg[0].d,
+      hs = cl2(hw(0) * tn, dista(P[0], P[1]) * 0.85);
+    if (tE) {
+      L[li] = { x: L[li].x + de.x * he, y: L[li].y + de.y * he };
+      R[ri] = { x: R[ri].x - de.x * he, y: R[ri].y - de.y * he };
+    }
+    if (tS) {
+      L[0] = { x: L[0].x - ds.x * hs, y: L[0].y - ds.y * hs };
+      R[0] = { x: R[0].x + ds.x * hs, y: R[0].y + ds.y * hs };
+    }
+  }
+  // tcut: offset del taglio butt lungo l'asse (+ allunga oltre il capo, − rientra)
+  const tc = o.tcut || 0;
+  if (tc && cap === "butt" && L.length && R.length) {
+    const de = sg[m - 1].d,
+      oe = cl2(hw(n - 1) * tc, dista(P[n - 1], P[n - 2]) * 0.85),
+      li = L.length - 1,
+      ri = R.length - 1,
+      ds = sg[0].d,
+      os = cl2(hw(0) * tc, dista(P[0], P[1]) * 0.85);
+    if (tE) {
+      L[li] = { x: L[li].x + de.x * oe, y: L[li].y + de.y * oe };
+      R[ri] = { x: R[ri].x + de.x * oe, y: R[ri].y + de.y * oe };
+    }
+    if (tS) {
+      L[0] = { x: L[0].x - ds.x * os, y: L[0].y - ds.y * os };
+      R[0] = { x: R[0].x - ds.x * os, y: R[0].y - ds.y * os };
+    }
   }
   const outer = L.slice();
   termCap(
@@ -386,11 +433,11 @@ function traccia(P, w, o) {
     R[R.length - 1],
     hw(n - 1),
     sg[m - 1].d,
-    cap,
+    capE,
     outer,
   );
   for (let i = R.length - 1; i >= 0; i--) outer.push(R[i]);
-  termCap(P[0], R[0], L[0], hw(0), { x: -sg[0].d.x, y: -sg[0].d.y }, cap, outer);
+  termCap(P[0], R[0], L[0], hw(0), { x: -sg[0].d.x, y: -sg[0].d.y }, capS, outer);
   return { outer, holes: [] };
 }
 function distSeg(p, a, b) {

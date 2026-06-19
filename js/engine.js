@@ -43,8 +43,9 @@ function costr(ch, raw, penX, capTop, size) {
     trapMax: p.trapMax,
     penrot: p.penang,
     tang: p.tang,
-    stem: p.peso * size,
-    bar: p.bar * size,
+    tcut: p.tcut,
+    stem: p.peso * size,           // asse largo della nib (peso)
+    contrast: p.contrasto || 0,    // asse stretto = stem*(1-contrast)
   };
   const isLow = ch >= "a" && ch <= "z",
     xt0 = 0.333,
@@ -109,7 +110,7 @@ function costr(ch, raw, penX, capTop, size) {
         });
     }
     pts = pts.map(remapPt);
-    return { pts, chiuso: tr.chiuso, e: tr.e };
+    return { pts, chiuso: tr.chiuso, e: tr.e, term: tr.term };
   });
   // glyph extremes (for overshoot + quadrant center)
   let ymin = 1e9,
@@ -189,7 +190,7 @@ function costr(ch, raw, penX, capTop, size) {
     if (p.convex) base0 = bulge(base0, p.convex, tr.chiuso);
     if (p.quadOn) base0 = bulgeQuad(base0, tr.chiuso, p.quad, qcx, qcy);
     const sm = thin(liscia(base0, tr.chiuso), tr.chiuso, 0.0004);
-    cl.push({ pts: sm.map(TX), chiuso: tr.chiuso, e: tr.e });
+    cl.push({ pts: sm.map(TX), chiuso: tr.chiuso, e: tr.e, term: tr.term });
   }
   const epsJ = Math.max(wpx * 0.7, size * 0.015),
     openS = cl.filter((c) => !c.chiuso && c.pts.length >= 2),
@@ -274,7 +275,7 @@ function costr(ch, raw, penX, capTop, size) {
     u = Math.max(0, Math.min(1, u));
     const cp = { x: a.x + vx * u, y: a.y + vy * u },
       along = (cp.x - pp.x) * t.x + (cp.y - pp.y) * t.y,
-      ext = Math.max(0, along) + Math.max(p.peso, p.bar) * size * 0.3;
+      ext = Math.max(0, along) + p.peso * size * 0.3;
     return { x: pp.x + t.x * ext, y: pp.y + t.y * ext };
   };
   if (union0)
@@ -287,7 +288,7 @@ function costr(ch, raw, penX, capTop, size) {
     const rb = traccia(
       c.pts,
       wpx,
-      Object.assign({ closed: c.chiuso, taperS: c.tS, taperE: c.tE }, opt),
+      Object.assign({ closed: c.chiuso, taperS: c.tS, taperE: c.tE, term: c.term }, opt),
     );
     if (rb) base.push(rb);
   }

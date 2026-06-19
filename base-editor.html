@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- shell: se aperta fuori dall'iframe, rientra nella shell (URL resta /) -->
+    <script>
+      (function () {
+        if (window.top === window.self) {
+          var h = location.hash + location.search;
+          if (!/access_token|type=recovery|type=signup/.test(h))
+            location.replace("/");
+        }
+      })();
+    </script>
+    <title>Apice Studio — Editor base scheletri</title>
+    <link rel="stylesheet" href="design-system/styles.css" />
+    <style>
+      /* Bridge: nomi locali → token DS (design-system/styles.css).
+         --panel, --line, --muted, --accent restano quelli DS. */
+      :root {
+        --bg: var(--paper);
+        --btn: var(--surface);
+        --btn2: var(--well);
+        --txt: var(--ink);
+        --hot: var(--danger);
+        --guide: var(--line-2);
+        --node: var(--ink);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--txt);
+        font: var(--weight-regular) var(--text-md)/1.4 var(--font-sans);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #side {
+        width: 250px;
+        background: var(--panel);
+        border-right: 1px solid var(--line);
+        padding: 14px;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+      #main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      h1 { font-size: 14px; margin: 0 0 4px; letter-spacing: 0.3px; }
+      .sub { color: var(--muted); font-size: 11px; margin-bottom: 14px; }
+      .lab {
+        color: var(--muted);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin: 14px 0 6px;
+      }
+      button {
+        background: var(--surface);
+        color: var(--txt);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        padding: 7px 9px;
+        font: inherit;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 5px;
+        text-align: left;
+        box-shadow: var(--shadow-key);
+        transition: box-shadow var(--dur) var(--ease-key), transform var(--dur-fast) var(--ease-key);
+      }
+      button:hover { box-shadow: var(--shadow-key-hover); }
+      button:active { transform: translateY(var(--key-travel)); box-shadow: var(--shadow-key-press); }
+      button.on { background: var(--accent); border-color: var(--accent-press); color: var(--accent-text); }
+      button.danger:hover { border-color: var(--danger-line); color: var(--hot); }
+      .row { display: flex; gap: 5px; }
+      .row button { margin-bottom: 0; }
+      #glyphs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        margin-bottom: 6px;
+      }
+      .gly {
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        text-align: center;
+        font-size: 13px;
+      }
+      .gly.cur { border-color: var(--accent-press); background: var(--accent); color: var(--accent-text); }
+      .gly.edited { color: var(--accent); }
+      input[type="range"] { width: 100%; accent-color: var(--accent); }
+      input[type="number"], input[type="text"] {
+        background: var(--surface);
+        color: var(--txt);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        padding: 5px 6px;
+        font: var(--weight-regular) var(--text-md)/1.4 var(--font-mono);
+        width: 100%;
+        box-shadow: var(--shadow-well);
+      }
+      .field { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+      .field span { color: var(--muted); width: 18px; }
+      label.chk { display: flex; align-items: center; gap: 6px; color: var(--muted); margin-bottom: 6px; cursor: pointer; }
+      canvas { background: var(--display-bg); border-radius: var(--radius-xl); box-shadow: var(--shadow-display); touch-action: none; }
+      #hint {
+        position: absolute;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--muted);
+        font-size: 11px;
+        text-align: center;
+        max-width: 80%;
+      }
+      #toast {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--panel);
+        border: 1px solid var(--border-strong);
+        box-shadow: var(--shadow-panel);
+        padding: 7px 12px;
+        border-radius: var(--radius-md);
+        opacity: 0;
+        transition: opacity 0.25s;
+        pointer-events: none;
+      }
+      #toast.show { opacity: 1; }
+      a.back { color: var(--muted); text-decoration: none; font-size: 11px; }
+      textarea#codeOut {
+        width: 100%;
+        height: 150px;
+        background: var(--display-bg);
+        color: var(--display-ink);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-display);
+        padding: 8px;
+        font: var(--weight-regular) var(--text-sm)/1.4 var(--font-mono);
+        resize: vertical;
+        white-space: pre;
+        margin-bottom: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="side">
+      <h1>Editor base scheletri</h1>
+      <div class="sub">Migliora gli scheletri base senza toccare il codice. <a class="back" href="editor.html">← torna al tool</a></div>
+
+      <div class="lab">Glifo</div>
+      <div id="glyphs"></div>
+
+      <div class="lab">Larghezza glifo (w)</div>
+      <div class="field">
+        <input type="range" id="wRange" min="0.2" max="1.6" step="0.001" />
+      </div>
+      <div class="field"><span>w</span><input type="number" id="wNum" step="0.001" /></div>
+
+      <div class="lab">Nodo selezionato</div>
+      <div class="field"><span>X</span><input type="number" id="nx" step="0.001" /></div>
+      <div class="field"><span>Y</span><input type="number" id="ny" step="0.001" /></div>
+      <button id="smoothNode">Nodo curvo / spigolo (S)</button>
+      <button id="delNode" class="danger">Elimina nodo (Canc)</button>
+
+      <div class="lab">Tratto</div>
+      <button id="newStroke">Nuovo tratto (N)</button>
+      <button id="toggleClosed">Apri / chiudi tratto (C)</button>
+      <button id="delStroke" class="danger">Elimina tratto</button>
+
+      <div class="lab">Aiuti</div>
+      <label class="chk"><input type="checkbox" id="snap" checked /> Snap a guide / nodi</label>
+
+      <div class="lab">Font da ricalcare (traccia)</div>
+      <button id="traceLoad">Carica font…</button>
+      <button id="traceTog">Mostra / nascondi</button>
+
+      <div class="lab">Codice per data.js</div>
+      <label class="chk"><input type="checkbox" id="codeAll" /> Tutti i glifi modificati</label>
+      <textarea id="codeOut" readonly placeholder="Premi «Genera codice»"></textarea>
+      <div class="row">
+        <button id="genCode">Genera codice</button>
+        <button id="copyCode" class="on">Copia</button>
+      </div>
+
+      <div class="lab">Reset</div>
+      <button id="resetGlyph" class="danger">Reset glifo a Hershey</button>
+      <button id="resetAll" class="danger">Reset tutta la base</button>
+
+      <input type="file" id="tracein" accept=".ttf,.otf,.woff,font/*" style="display:none" />
+    </div>
+
+    <div id="main">
+      <canvas id="cv" width="620" height="620"></canvas>
+      <div id="hint">Trascina i nodi · doppio click su un segmento per aggiungere · Canc elimina · N nuovo tratto</div>
+      <div id="toast"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/geometry.js"></script>
+    <script src="base-editor.js"></script>
+  </body>
+</html>
