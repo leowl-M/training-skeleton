@@ -1,0 +1,12 @@
+{
+  "name": "apice-studio",
+  "version": "1.0.0",
+  "description": "Strumento parametrico per il disegno di font: scheletri → outline, master interpolabili, export OTF",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

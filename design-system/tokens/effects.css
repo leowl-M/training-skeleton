@@ -1,0 +1,44 @@
+/* ===== Press · Effects — Instrument edition ===============================
+   No glass, no blur. Surfaces are physical: raised keys catch a top highlight
+   and cast a soft shadow; wells are recessed with an inset shadow; the display
+   glows. Motion is mechanical and short.
+   ========================================================================= */
+:root {
+  /* — raised tactile parts (keys, knob caps, panel faces) — */
+  --shadow-key:       inset 0 1px 0 var(--bevel-light), 0 1px 1px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.12);
+  --shadow-key-hover: inset 0 1px 0 var(--bevel-light), 0 2px 3px rgba(0,0,0,0.14), 0 4px 8px rgba(0,0,0,0.12);
+  --shadow-key-press: inset 0 2px 4px rgba(0,0,0,0.22);
+
+  /* — recessed wells (tracks, fields, displays) — */
+  --shadow-well:    inset 0 2px 4px rgba(0,0,0,0.18), inset 0 -1px 0 var(--bevel-light);
+  --shadow-display: inset 0 2px 6px rgba(0,0,0,0.55);
+
+  /* — floating surfaces (panels, docks, modals) — */
+  --shadow-panel: 0 1px 0 var(--bevel-light) inset, 0 16px 40px -16px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.10);
+  --shadow-card:  0 1px 2px rgba(0,0,0,0.08), 0 1px 0 var(--bevel-light) inset;
+
+  /* — accent glow (live LED) — */
+  --glow-accent: 0 0 0 2px var(--accent-soft), 0 0 6px rgba(255,77,6,0.5);
+
+  /* — motion: mechanical & short — */
+  --ease-key:  cubic-bezier(0.2, 0.8, 0.2, 1); /* @kind other */
+  --dur-fast:  0.08s;  /* @kind other */
+  --dur:       0.13s;  /* @kind other */
+  --dur-slow:  0.2s;   /* @kind other */
+
+  /* — scrim — */
+  --scrim: rgba(26, 25, 22, 0.42);
+
+  /* — press travel — */
+  --key-travel: 1px;   /* @kind other */
+}
+
+[data-theme="dark"] {
+  --shadow-key:       inset 0 1px 0 var(--bevel-light), 0 2px 4px rgba(0,0,0,0.45);
+  --shadow-key-hover: inset 0 1px 0 var(--bevel-light), 0 3px 7px rgba(0,0,0,0.5);
+  --shadow-key-press: inset 0 2px 5px rgba(0,0,0,0.6);
+  --shadow-well:    inset 0 2px 5px rgba(0,0,0,0.6), inset 0 -1px 0 var(--bevel-light);
+  --shadow-panel: 0 1px 0 var(--bevel-light) inset, 0 18px 44px -16px rgba(0,0,0,0.7);
+  --shadow-card:  0 2px 6px rgba(0,0,0,0.4), 0 1px 0 var(--bevel-light) inset;
+  --scrim: rgba(0, 0, 0, 0.55);
+}

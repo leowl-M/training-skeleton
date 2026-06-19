@@ -1,0 +1,79 @@
+/* ===== Press · Colors — Instrument edition ================================
+   A warm off-white instrument body, near-black ink, and ONE functional hue:
+   signal orange. Color is earned — it marks what's live, selected or playing;
+   everything else is neutral. Light is the default; a charcoal hardware dark
+   theme is available via [data-theme="dark"].
+   ========================================================================= */
+:root {
+  /* — instrument body & surfaces (light) — */
+  --paper:    #e7e5e0;   /* page / instrument body (warm light gray) */
+  --panel:    #f3f2ee;   /* raised panel / module face */
+  --surface:  #fbfbf9;   /* white inset, cards, fields */
+  --well:     #d6d4cc;   /* recessed track / control well */
+  --ink:      #1a1916;   /* near-black text */
+  --muted:    #86837b;   /* secondary text / labels */
+  --faint:    #b4b1a8;   /* tertiary / placeholders */
+
+  /* — lines & physical bevels — */
+  --line:        rgba(0, 0, 0, 0.12);   /* hairline divider */
+  --line-2:      rgba(0, 0, 0, 0.24);   /* stronger divider / outline */
+  --bevel-light: rgba(255, 255, 255, 0.92); /* top highlight on raised parts */
+  --bevel-dark:  rgba(0, 0, 0, 0.20);   /* lower edge shadow */
+
+  /* — accent: signal orange (the one hue) — */
+  --accent:       #ff4d06;
+  --accent-press: #e63f00;   /* darker, for pressed/hover */
+  --accent-text:  #ffffff;
+  --accent-soft:  rgba(255, 77, 6, 0.14);
+
+  /* — display (LCD/LED well) — */
+  --display-bg:   #1b1a16;   /* dark recessed readout */
+  --display-ink:  #ff5a1a;   /* lit segments (orange) */
+  --display-dim:  rgba(255, 90, 26, 0.16); /* unlit segment ghost */
+
+  /* — semantic (destructive only; kept distinct from the orange accent) — */
+  --danger:        #b5331b;
+  --danger-soft:   rgba(181, 51, 27, 0.12);
+  --danger-line:   rgba(181, 51, 27, 0.34);
+
+  /* — glyph on the type canvas — */
+  --glyph: #16150f;
+
+  /* — semantic aliases (prefer these) — */
+  --surface-body:    var(--paper);
+  --surface-panel:   var(--panel);
+  --surface-raised:  var(--surface);
+  --surface-well:    var(--well);
+  --text-primary:    var(--ink);
+  --text-secondary:  var(--muted);
+  --text-tertiary:   var(--faint);
+  --text-on-accent:  var(--accent-text);
+  --border-subtle:   var(--line);
+  --border-strong:   var(--line-2);
+  --focus-ring:      var(--accent);
+}
+
+[data-theme="dark"] {
+  --paper:    #201f1c;
+  --panel:    #2a2925;
+  --surface:  #1a1916;
+  --well:     #141310;
+  --ink:      #ededea;
+  --muted:    #8f8c83;
+  --faint:    #5f5d56;
+  --line:        rgba(255, 255, 255, 0.10);
+  --line-2:      rgba(255, 255, 255, 0.20);
+  --bevel-light: rgba(255, 255, 255, 0.08);
+  --bevel-dark:  rgba(0, 0, 0, 0.55);
+  --accent:       #ff5a1a;
+  --accent-press: #ff7338;
+  --accent-text:  #16140f;
+  --accent-soft:  rgba(255, 90, 26, 0.18);
+  --display-bg:   #100f0c;
+  --display-ink:  #ff6a2c;
+  --display-dim:  rgba(255, 106, 44, 0.18);
+  --danger:        #e2543a;
+  --danger-soft:   rgba(226, 84, 58, 0.16);
+  --danger-line:   rgba(226, 84, 58, 0.40);
+  --glyph: #f1f0ec;
+}
